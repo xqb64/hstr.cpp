@@ -13,15 +13,14 @@ size_t Query::character_count() {
 
 size_t Query::byte_index(size_t pos) {
     size_t idx = 0;
-    size_t current_codepoint = 0;
-    for (size_t i = 0; i < q.length(); ) {
-        if (current_codepoint == pos) break;
-        if (!is_continuation_byte(q[i])) {
-            current_codepoint++;
+    size_t current_char = 0;
+    while (idx < q.length()) {
+        if (current_char == pos) break;
+        if (!is_continuation_byte(q[idx])) {
+            current_char++;
         }
-        int bc = byte_count(q[i]);
-        idx += bc;
-        i += bc;
+        int count = byte_count(q[idx]);
+        idx += count;
     }
     return idx;
 }
