@@ -12,10 +12,11 @@ enum CursorDirection {
 class UserInterface {
 public:
     void move_cursor(CursorDirection d);
+    void reposition_cursor();
     void insert_into_query(std::string s);
-private:
-    void reprint_query();
+    void remove_from_query();
     void clear_row(size_t r);
+private:
     Query query;
     size_t cursor_position = 0;
 };

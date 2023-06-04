@@ -24,6 +24,11 @@ int main() {
                 user_interface.move_cursor(CURSOR_RIGHT);
                 break;
             }
+            case KEY_BACKSPACE: {
+                user_interface.move_cursor(CURSOR_LEFT);
+                user_interface.remove_from_query();
+                break;
+            }
             default: {
                 tmp.push_back(user_input);
                 if (utf8::is_valid(tmp)) {
