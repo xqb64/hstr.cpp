@@ -24,6 +24,10 @@ int main() {
                 user_interface.move_cursor(CURSOR_RIGHT);
                 break;
             }
+            case KEY_DC: {
+                user_interface.remove_from_query();
+                break;
+            }
             case KEY_BACKSPACE: {
                 user_interface.move_cursor(CURSOR_LEFT);
                 user_interface.remove_from_query();
