@@ -36,9 +36,12 @@ int main() {
             default: {
                 tmp.push_back(user_input);
                 if (utf8::is_valid(tmp)) {
+                    user_interface.clear_error();
                     user_interface.insert_into_query(tmp);
                     user_interface.move_cursor(CURSOR_RIGHT);
                     tmp.clear();
+                } else {
+                    user_interface.display_error("Buffer contains invalid input.");
                 }
                 break;
             }
