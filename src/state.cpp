@@ -19,8 +19,7 @@ size_t Query::byte_index(size_t pos) {
         if (!is_continuation_byte(q[idx])) {
             current_char++;
         }
-        int count = byte_count(q[idx]);
-        idx += count;
+        idx += byte_count(q[idx]);
     }
     return idx;
 }
