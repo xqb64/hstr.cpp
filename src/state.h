@@ -6,7 +6,7 @@
 
 class Query {
 public:
-    size_t character_count();
+    size_t char_count();
     size_t byte_index(size_t pos);
     const char *c_str() const { return q.c_str(); }
     std::string insert(size_t idx, std::string s) { return q.insert(idx, s); }

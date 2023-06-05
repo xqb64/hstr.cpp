@@ -15,7 +15,7 @@ void UserInterface::move_cursor(CursorDirection d) {
             break;
         }
         case CURSOR_RIGHT: {
-            if (cursor_position < query.character_count()) {
+            if (cursor_position < query.char_count()) {
                 cursor_position++;
             }
             break;
