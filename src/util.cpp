@@ -49,4 +49,9 @@ std::pair<std::vector<std::string>::iterator, std::vector<std::string>::iterator
     }
 
     return std::make_pair(start, start + last_n);
-}    
+}
+
+std::string trim_string(std::string &s, size_t n) {
+    size_t idx = byte_index(s, n);
+    return s.substr(0, idx);
+}

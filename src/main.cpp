@@ -34,6 +34,7 @@ int main() {
             }
             case KEY_DC: {
                 user_interface.remove_from_query();
+                user_interface.search();
                 break;
             }
             case KEY_BACKSPACE: {
@@ -42,6 +43,7 @@ int main() {
                  * before the start of the query string. */
                 if (pos > 0) {
                     user_interface.remove_from_query();
+                    user_interface.search();
                 }
                 break;
             }
@@ -55,6 +57,7 @@ int main() {
                     user_interface.clear_error();
                     user_interface.insert_into_query(tmp);
                     user_interface.move_cursor(DIRECTION_RIGHT);
+                    user_interface.search();
                     tmp.clear();
                 } else {
                     user_interface.display_error("Buffer contains invalid input.");

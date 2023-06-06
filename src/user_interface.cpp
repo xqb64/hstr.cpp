@@ -1,5 +1,6 @@
 #include <cmath>
-#include <iostream>
+#include <sstream>
+#include <regex>
 #include "curses.h"
 #include "user_interface.h"
 #include "util.h"
@@ -7,36 +8,60 @@
 UserInterface::UserInterface() {
     init_color_pairs();
     read_history();
-    print_history();
+    search();
 }
 
 void UserInterface::read_history() {
     history = read_file("/home/alex/Repositories/hstr/fake_history");
 }
 
-void UserInterface::print_history() {
-    auto [start, end] = find_range(history, page);
-    std::vector<std::string> slice(start, end);
-    for (size_t i = 0; i != slice.size(); i++) {
-        if (i == highlighted) {
-            attron(COLOR_PAIR(3));
-            mvaddstr(i+1, 1, slice[i].substr(0, byte_index(slice[i], max_entry_length())).c_str());
-            pad2end();
-            attroff(COLOR_PAIR(3));
-        } else {
-            attron(COLOR_PAIR(1));
-            mvaddstr(i+1, 1, slice[i].substr(0, byte_index(slice[i], max_entry_length())).c_str());
-            pad2end();
-            attroff(COLOR_PAIR(1));
+void UserInterface::search() {
+    std::vector<std::string> results;
+    for (auto it = history.cbegin(); it != history.cend(); it++) {
+        if (std::regex_search(it->cbegin(), it->cend(), std::regex(query.as_string()))) {
+            results.push_back(*it);
         }
     }
+    search_results = std::move(results);
+    print_history();
+}
+
+void UserInterface::print_history() {
+    clear();
+    auto [start, end] = find_range(search_results, page);
+    for (auto it = start; it != end; it++) {
+        size_t idx = std::distance(start, end) - std::distance(it, end);
+        bool is_highlighted = idx == highlighted;
+        std::string trimmed = trim_string(*it, max_entry_length());
+        attron(is_highlighted ? COLOR_PAIR(3) : COLOR_PAIR(1));
+        mvaddstr(idx+1, 1, trimmed.c_str());
+        pad2end();
+        attroff(is_highlighted ? COLOR_PAIR(3) : COLOR_PAIR(1));
+    }
+    display_status();
+    reposition_cursor();
+}
+
+void UserInterface::display_status() {
+    std::ostringstream status;
+    status << " page: " 
+           << page
+           << "/"
+           << page_count()
+           << " | "
+           << "mode: "
+           << "exact";
+    attron(COLOR_PAIR(4));
+    mvaddstr(getmaxy(stdscr)-1, 1, status.str().c_str());
+    pad2end();
+    attroff(COLOR_PAIR(4));
 }
 
 size_t UserInterface::page_count() {
-    return ceil(history.size() / static_cast<float>(max_entry_count()));
+    return ceil(search_results.size() / static_cast<float>(max_entry_count()));
 }
 
-void UserInterface::turn_page(Direction d) {
+void UserInterface::turn_page(VerticalDirection d) {
     clear();
     switch (d) {
         case DIRECTION_UP: {
@@ -58,7 +83,7 @@ void UserInterface::turn_page(Direction d) {
 }
 
 size_t UserInterface::max_entry_count() {
-    return getmaxy(stdscr) - 1;
+    return getmaxy(stdscr) - 2;
 }
 
 size_t UserInterface::max_entry_length() {
@@ -66,11 +91,11 @@ size_t UserInterface::max_entry_length() {
 }
 
 size_t UserInterface::entry_count() {
-    auto [start, end] = find_range(history, page);
+    auto [start, end] = find_range(search_results, page);
     return end - start;
 }
 
-void UserInterface::move_highlighted(Direction d) {
+void UserInterface::move_highlighted(VerticalDirection d) {
     switch (d) {
         case DIRECTION_UP: {
             if (highlighted > 0) {
@@ -94,7 +119,8 @@ void UserInterface::move_highlighted(Direction d) {
     print_history();
 }
 
-size_t UserInterface::move_cursor(Direction d) {
+size_t UserInterface::move_cursor(HorizontalDirection d) {
+    size_t old_position = cursor_position;
     switch (d) {
         case DIRECTION_LEFT: {
             if (cursor_position > 0) {
@@ -110,7 +136,7 @@ size_t UserInterface::move_cursor(Direction d) {
         }
     }
     reposition_cursor();
-    return cursor_position;
+    return old_position;
 }
 
 void UserInterface::reposition_cursor() {
@@ -144,6 +170,7 @@ void UserInterface::init_color_pairs() {
     init_pair(1, COLOR_WHITE, COLOR_BLACK);
     init_pair(2, COLOR_WHITE, COLOR_RED);
     init_pair(3, COLOR_WHITE, COLOR_GREEN);
+    init_pair(4, COLOR_BLACK, COLOR_WHITE);
 }
 
 void UserInterface::clear_error() {
