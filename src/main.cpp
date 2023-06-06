@@ -38,6 +38,8 @@ int main() {
             }
             case KEY_BACKSPACE: {
                 size_t pos = user_interface.move_cursor(DIRECTION_LEFT);
+                /* Don't delete anything if the cursor is positioned
+                 * before the start of the query string. */
                 if (pos > 0) {
                     user_interface.remove_from_query();
                 }
