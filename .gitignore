@@ -1,3 +1,6 @@
 obj/
 test/
+.vscode/
 hstr
+fake_history
+
