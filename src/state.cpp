@@ -11,15 +11,3 @@ size_t Query::char_count() {
     return total;
 }
 
-size_t Query::byte_index(size_t pos) {
-    size_t idx = 0;
-    size_t current_char = 0;
-    while (idx < q.length()) {
-        if (current_char == pos) break;
-        if (!is_continuation_byte(q[idx])) {
-            current_char++;
-        }
-        idx += byte_count(q[idx]);
-    }
-    return idx;
-}

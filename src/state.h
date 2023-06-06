@@ -6,8 +6,8 @@
 
 class Query {
 public:
+    std::string as_string() { return q; }
     size_t char_count();
-    size_t byte_index(size_t pos);
     const char *c_str() const { return q.c_str(); }
     std::string insert(size_t idx, std::string s) { return q.insert(idx, s); }
     std::string substr(size_t a, size_t b) { return q.substr(a, b); }
