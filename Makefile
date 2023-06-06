@@ -3,7 +3,8 @@ SRC := $(wildcard src/*.cpp)
 CC := g++
 
 CXXFLAGS += -g
-CXXFLAGS += -Wshadow -Wall -Wextra
+CXXFLAGS += -Wshadow -Wall -Wextra -Wpedantic
+CXXFLAGS += -Wswitch-enum
 CXXFLAGS += -O3
 CXXFLAGS += --std=c++20
 LDLIBS = -lncursesw
