@@ -16,10 +16,6 @@ int main() {
     for (;;) {
         int user_input = getch();
         switch (user_input) {
-            case KEY_RESIZE: {
-                user_interface.print_history();
-                break;
-            }
             case KEY_UP: {
                 user_interface.move_highlighted(DIRECTION_UP);
                 break;
@@ -45,6 +41,10 @@ int main() {
                 if (pos > 0) {
                     user_interface.remove_from_query();
                 }
+                break;
+            }
+            case KEY_RESIZE: {
+                user_interface.print_history();
                 break;
             }
             default: {
