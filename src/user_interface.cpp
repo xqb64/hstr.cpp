@@ -18,8 +18,13 @@ void UserInterface::read_history() {
 void UserInterface::search() {
     std::vector<std::string> results;
     for (auto it = history.cbegin(); it != history.cend(); it++) {
-        if (std::regex_search(it->cbegin(), it->cend(), std::regex(query.as_string()))) {
-            results.push_back(*it);
+        try {
+            if (std::regex_search(it->cbegin(), it->cend(), std::regex(query.as_string()))) {
+                results.push_back(*it);
+                error = nullptr;
+            }
+        } catch (std::regex_error &e) {
+            error = "Invalid regex.";
         }
     }
     search_results = std::move(results);
@@ -43,6 +48,11 @@ void UserInterface::print_history() {
 }
 
 void UserInterface::display_status() {
+    if (error) {
+        clear();
+        display_error();
+        return;
+    }
     std::ostringstream status;
     status << " page: " 
            << page
@@ -157,10 +167,10 @@ void UserInterface::remove_from_query() {
     reposition_cursor();
 }
 
-void UserInterface::display_error(const char *err) {
-    size_t last_row = max_entry_count();
+void UserInterface::display_error() {
+    size_t last_row = getmaxy(stdscr)-1;
     attron(COLOR_PAIR(2) | A_BOLD);
-    mvaddstr(last_row, 1, err);
+    mvaddstr(last_row, 1, error);
     pad2end();
     attroff(COLOR_PAIR(2) | A_BOLD);
 }
@@ -171,11 +181,6 @@ void UserInterface::init_color_pairs() {
     init_pair(2, COLOR_WHITE, COLOR_RED);
     init_pair(3, COLOR_WHITE, COLOR_GREEN);
     init_pair(4, COLOR_BLACK, COLOR_WHITE);
-}
-
-void UserInterface::clear_error() {
-    size_t last_row = max_entry_count();
-    clear_row(last_row);
 }
 
 void UserInterface::clear_row(size_t r) {
@@ -191,4 +196,8 @@ void UserInterface::pad2end() {
     for (int i = 0; i < diff; i++) {
         addch(' ');
     }
+}
+
+void UserInterface::set_error(const char *err) {
+    error = err;
 }

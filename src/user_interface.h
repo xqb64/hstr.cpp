@@ -23,8 +23,7 @@ public:
     size_t move_cursor(HorizontalDirection d);
     void insert_into_query(std::string s);
     void remove_from_query();
-    void display_error(const char *err);
-    void clear_error();
+    void set_error(const char *error);
     void print_history();
 private:
     size_t page_count();
@@ -32,6 +31,7 @@ private:
     size_t max_entry_count();
     size_t max_entry_length();
     void display_status();
+    void display_error();
     void turn_page(VerticalDirection d);
     void read_history();
     void reposition_cursor();
@@ -44,6 +44,7 @@ private:
     size_t cursor_position = 0;
     size_t page = 1;
     size_t highlighted = 0;
+    const char *error;
 };
 
 #endif
