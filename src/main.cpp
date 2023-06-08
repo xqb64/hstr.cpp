@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <utf8.h>
 
+const int CTRL_E = 5;
+
 int main() {
     setlocale(LC_ALL, "");
     initscr();
@@ -35,6 +37,10 @@ int main() {
             case KEY_DC: {
                 user_interface.remove_from_query();
                 user_interface.search();
+                break;
+            }
+            case CTRL_E: {
+                user_interface.toggle_search_mode();
                 break;
             }
             case KEY_BACKSPACE: {

@@ -1,6 +1,7 @@
 #include <cmath>
 #include <sstream>
 #include <regex>
+#include <rapidfuzz/fuzz.hpp>
 #include "curses.h"
 #include "user_interface.h"
 #include "util.h"
@@ -15,11 +16,47 @@ void UserInterface::read_history() {
     history = read_file("/home/alex/Repositories/hstr/fake_history");
 }
 
+void UserInterface::toggle_search_mode() {
+    search_mode = static_cast<SearchMode>((search_mode + 1) % 3);
+    search();
+    display_status();
+}
+
 void UserInterface::search() {
+    switch (search_mode) {
+        case MODE_EXACT: exact_search(); break;
+        case MODE_REGEX: regex_search(); break;
+        case MODE_FUZZY: fuzzy_search(); break;
+    }
+}
+
+void UserInterface::exact_search() {
+    std::vector<std::string> results;
+    for (auto it = history.cbegin(); it != history.cend(); it++) {
+        if (it->find(query) != std::string::npos) {
+            results.push_back(*it);
+        }
+    }
+    search_results = std::move(results);
+    print_history();
+}
+
+void UserInterface::fuzzy_search() {
+    std::vector<std::string> results;
+    for (auto it = history.cbegin(); it != history.cend(); it++) {
+        if (rapidfuzz::fuzz::partial_ratio(*it, query, 65.0)) {
+            results.push_back(*it);
+        }
+    }
+    search_results = std::move(results);
+    print_history();
+}
+
+void UserInterface::regex_search() {
     std::vector<std::string> results;
     for (auto it = history.cbegin(); it != history.cend(); it++) {
         try {
-            if (std::regex_search(it->cbegin(), it->cend(), std::regex(query.as_string()))) {
+            if (std::regex_search(it->cbegin(), it->cend(), std::regex(query))) {
                 results.push_back(*it);
                 error = nullptr;
             }
@@ -38,10 +75,19 @@ void UserInterface::print_history() {
         size_t idx = std::distance(start, end) - std::distance(it, end);
         bool is_highlighted = idx == highlighted;
         std::string trimmed = trim_string(*it, max_entry_length());
-        attron(is_highlighted ? COLOR_PAIR(3) : COLOR_PAIR(1));
-        mvaddstr(idx+1, 1, trimmed.c_str());
-        pad2end();
-        attroff(is_highlighted ? COLOR_PAIR(3) : COLOR_PAIR(1));
+        
+        if (is_highlighted) {
+            attron(COLOR_PAIR(3));
+            mvaddstr(idx+1, 1, trimmed.c_str());
+            pad2end();
+            attroff(COLOR_PAIR(3));
+        } else {
+            attron(COLOR_PAIR(1));
+            mvaddstr(idx+1, 1, trimmed.c_str());
+            pad2end();
+            paint_matched_chars(*it, idx+1);
+            attroff(COLOR_PAIR(1));
+        }
     }
     display_status();
     reposition_cursor();
@@ -59,8 +105,21 @@ void UserInterface::display_status() {
            << "/"
            << page_count()
            << " | "
-           << "mode: "
-           << "exact";
+           << "mode: ";
+    switch (search_mode) {
+        case MODE_EXACT: {
+            status << "exact";
+            break;
+        }
+        case MODE_REGEX: {
+            status << "regex";
+            break;
+        }
+        case MODE_FUZZY: {
+            status << "fuzzy";
+            break;
+        }
+    }
     attron(COLOR_PAIR(4));
     mvaddstr(getmaxy(stdscr)-1, 1, status.str().c_str());
     pad2end();
@@ -149,19 +208,34 @@ size_t UserInterface::move_cursor(HorizontalDirection d) {
     return old_position;
 }
 
+void UserInterface::paint_matched_chars(const std::string &s, size_t row) {
+    std::vector<std::pair<size_t, size_t>> indexes;
+    if (search_mode == MODE_FUZZY) {
+        indexes = find_indexes_fuzzy(s, query);
+    } else {
+        indexes = find_indexes(s, query);
+    }
+    for (auto p : indexes) {
+        size_t position = find_position(s, p.first);
+        attron(COLOR_PAIR(5) | A_BOLD);
+        mvaddstr(row, position+1, s.substr(p.first, p.second).c_str());
+        attroff(COLOR_PAIR(5) | A_BOLD);
+    }
+}
+
 void UserInterface::reposition_cursor() {
     clear_row(0);
     mvaddstr(0, 1, query.c_str());
-    mvaddstr(0, 1, query.substr(0, byte_index(query.as_string(), cursor_position)).c_str());
+    mvaddstr(0, 1, query.substr(0, byte_index(query, cursor_position)).c_str());
 }
 
 void UserInterface::insert_into_query(std::string s) {
-    size_t current_idx = byte_index(query.as_string(), cursor_position);
+    size_t current_idx = byte_index(query, cursor_position);
     query.insert(current_idx, s);
 }
 
 void UserInterface::remove_from_query() {
-    size_t current_idx = byte_index(query.as_string(), cursor_position);
+    size_t current_idx = byte_index(query, cursor_position);
     size_t count = byte_count(query[current_idx]);
     query.erase(current_idx, count);
     reposition_cursor();
@@ -181,6 +255,7 @@ void UserInterface::init_color_pairs() {
     init_pair(2, COLOR_WHITE, COLOR_RED);
     init_pair(3, COLOR_WHITE, COLOR_GREEN);
     init_pair(4, COLOR_BLACK, COLOR_WHITE);
+    init_pair(5, COLOR_RED, COLOR_BLACK);
 }
 
 void UserInterface::clear_row(size_t r) {

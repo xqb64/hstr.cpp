@@ -5,6 +5,12 @@
 #include <vector>
 #include "state.h"
 
+enum SearchMode {
+    MODE_REGEX = 0,
+    MODE_EXACT = 1,
+    MODE_FUZZY = 2,
+};
+
 enum VerticalDirection {
     DIRECTION_UP = -1,
     DIRECTION_DOWN = 1,
@@ -24,12 +30,17 @@ public:
     void insert_into_query(std::string s);
     void remove_from_query();
     void set_error(const char *error);
+    void toggle_search_mode();
     void print_history();
 private:
     size_t page_count();
     size_t entry_count();
     size_t max_entry_count();
     size_t max_entry_length();
+    void exact_search();
+    void regex_search();
+    void fuzzy_search();
+    void paint_matched_chars(const std::string &s, size_t row);
     void display_status();
     void display_error();
     void turn_page(VerticalDirection d);
@@ -45,6 +56,7 @@ private:
     size_t page = 1;
     size_t highlighted = 0;
     const char *error;
+    SearchMode search_mode = MODE_REGEX;
 };
 
 #endif
