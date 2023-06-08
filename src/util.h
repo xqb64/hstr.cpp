@@ -14,5 +14,6 @@ std::string trim_string(const std::string &s, size_t n);
 std::vector<std::pair<size_t, size_t>> find_indexes(const std::string &s, const std::string &q);
 std::vector<std::pair<size_t, size_t>> find_indexes_fuzzy(const std::string &s, const std::string &q);
 std::size_t find_position(const std::string &s, size_t idx);
+std::string to_lowercase(const std::string &s);
 
 #endif

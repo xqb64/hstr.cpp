@@ -7,7 +7,7 @@ CXXFLAGS += -Wshadow -Wall -Wextra -Wpedantic
 CXXFLAGS += -Wswitch-enum
 CXXFLAGS += -O3
 CXXFLAGS += --std=c++20
-LDLIBS = -lncursesw
+LDLIBS = -lncursesw -licuuc -licui18n -licuio
 
 obj/%.o: src/%.cpp $(wildcard src/*.h)
 	mkdir -vp obj && $(CC) -c $(CXXFLAGS) $< -o $@

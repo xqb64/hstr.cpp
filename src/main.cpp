@@ -5,6 +5,7 @@
 #include <utf8.h>
 
 const int CTRL_E = 5;
+const int CTRL_T = 20;
 
 int main() {
     setlocale(LC_ALL, "");
@@ -41,6 +42,10 @@ int main() {
             }
             case CTRL_E: {
                 user_interface.toggle_search_mode();
+                break;
+            }
+            case CTRL_T: {
+                user_interface.toggle_case_sensitivity();
                 break;
             }
             case KEY_BACKSPACE: {

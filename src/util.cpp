@@ -1,5 +1,8 @@
 #include "util.h"
 #include "cursesw.h"
+#include <unicode/unistr.h>
+#include <unicode/ustream.h>
+#include <unicode/locid.h>
 #include <stdexcept>
 #include <fstream>
 #include <regex>
@@ -96,4 +99,11 @@ std::size_t find_position(const std::string &s, size_t idx) {
         i += byte_count(s[i]);
     }
     return position;
+}
+
+std::string to_lowercase(const std::string &s) {
+    icu::UnicodeString us(s.c_str(), "UTF-8");
+    std::string tmp;
+    us.toLower(icu::Locale::getRoot()).toUTF8String(tmp);
+    return tmp;
 }

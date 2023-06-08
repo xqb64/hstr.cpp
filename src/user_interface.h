@@ -6,8 +6,8 @@
 #include "state.h"
 
 enum SearchMode {
-    MODE_REGEX = 0,
-    MODE_EXACT = 1,
+    MODE_EXACT = 0,
+    MODE_REGEX = 1,
     MODE_FUZZY = 2,
 };
 
@@ -31,15 +31,16 @@ public:
     void remove_from_query();
     void set_error(const char *error);
     void toggle_search_mode();
+    void toggle_case_sensitivity();
     void print_history();
 private:
+    void exact_search();
+    void regex_search();
+    void fuzzy_search();
     size_t page_count();
     size_t entry_count();
     size_t max_entry_count();
     size_t max_entry_length();
-    void exact_search();
-    void regex_search();
-    void fuzzy_search();
     void paint_matched_chars(const std::string &s, size_t row);
     void display_status();
     void display_error();
@@ -55,8 +56,9 @@ private:
     size_t cursor_position = 0;
     size_t page = 1;
     size_t highlighted = 0;
-    const char *error;
-    SearchMode search_mode = MODE_REGEX;
+    const char *error = NULL;
+    SearchMode search_mode = MODE_EXACT;
+    bool case_sensitivity = false;
 };
 
 #endif

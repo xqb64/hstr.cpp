@@ -2,6 +2,11 @@
 #include <sstream>
 #include <regex>
 #include <rapidfuzz/fuzz.hpp>
+#include <unicode/unistr.h>
+#include <unicode/locid.h>
+#include <unicode/ustream.h>
+#include <unicode/schriter.h>
+#include <unicode/stsearch.h>
 #include "curses.h"
 #include "user_interface.h"
 #include "util.h"
@@ -22,6 +27,12 @@ void UserInterface::toggle_search_mode() {
     display_status();
 }
 
+void UserInterface::toggle_case_sensitivity() {
+    case_sensitivity = !case_sensitivity;
+    search();
+    display_status();
+}
+
 void UserInterface::search() {
     switch (search_mode) {
         case MODE_EXACT: exact_search(); break;
@@ -31,10 +42,26 @@ void UserInterface::search() {
 }
 
 void UserInterface::exact_search() {
+    if (query.empty()) {
+        search_results = history;
+        print_history();
+        return;
+    }
     std::vector<std::string> results;
-    for (auto it = history.cbegin(); it != history.cend(); it++) {
-        if (it->find(query) != std::string::npos) {
-            results.push_back(*it);
+    std::string _q = case_sensitivity ? query : to_lowercase(query);
+    for (std::string entry : history) {
+        entry = case_sensitivity ? entry : to_lowercase(entry);
+
+        icu::UnicodeString e(entry.c_str(), "UTF-8");
+        icu::UnicodeString q(_q.c_str(), "UTF-8");
+        UErrorCode status = U_ZERO_ERROR;
+
+        icu::StringSearch search(q, e, icu::Locale::getRoot(), NULL, status);
+        
+        int pos = search.first(status);
+
+        if (U_SUCCESS(status) && pos != USEARCH_DONE) {
+            results.push_back(entry);
         }
     }
     search_results = std::move(results);
@@ -42,10 +69,17 @@ void UserInterface::exact_search() {
 }
 
 void UserInterface::fuzzy_search() {
+    if (query.empty()) {
+        search_results = history;
+        print_history();
+        return;
+    }
     std::vector<std::string> results;
-    for (auto it = history.cbegin(); it != history.cend(); it++) {
-        if (rapidfuzz::fuzz::partial_ratio(*it, query, 65.0)) {
-            results.push_back(*it);
+    std::string q = case_sensitivity ? query : to_lowercase(query);
+    for (std::string entry : history) {       
+        entry = case_sensitivity ? entry : to_lowercase(entry);
+        if (rapidfuzz::fuzz::partial_ratio(entry, q, 65.0)) {
+            results.push_back(entry);
         }
     }
     search_results = std::move(results);
@@ -54,10 +88,12 @@ void UserInterface::fuzzy_search() {
 
 void UserInterface::regex_search() {
     std::vector<std::string> results;
-    for (auto it = history.cbegin(); it != history.cend(); it++) {
+    std::string q = case_sensitivity ? query : to_lowercase(query);
+    for (std::string entry : history) {
+        entry = case_sensitivity ? entry : to_lowercase(entry);
         try {
-            if (std::regex_search(it->cbegin(), it->cend(), std::regex(query))) {
-                results.push_back(*it);
+            if (std::regex_search(entry.cbegin(), entry.cend(), std::regex(q))) {
+                results.push_back(entry);
                 error = nullptr;
             }
         } catch (std::regex_error &e) {
@@ -76,17 +112,13 @@ void UserInterface::print_history() {
         bool is_highlighted = idx == highlighted;
         std::string trimmed = trim_string(*it, max_entry_length());
         
-        if (is_highlighted) {
-            attron(COLOR_PAIR(3));
-            mvaddstr(idx+1, 1, trimmed.c_str());
-            pad2end();
-            attroff(COLOR_PAIR(3));
-        } else {
-            attron(COLOR_PAIR(1));
-            mvaddstr(idx+1, 1, trimmed.c_str());
-            pad2end();
+        attron(is_highlighted ? COLOR_PAIR(3) : COLOR_PAIR(1));
+        mvaddstr(idx+1, 1, trimmed.c_str());
+        pad2end();
+        attroff(is_highlighted ? COLOR_PAIR(3) : COLOR_PAIR(1));
+
+        if (!is_highlighted) {
             paint_matched_chars(*it, idx+1);
-            attroff(COLOR_PAIR(1));
         }
     }
     display_status();
@@ -120,6 +152,7 @@ void UserInterface::display_status() {
             break;
         }
     }
+    status << " case: " << (case_sensitivity ? "sensitive" : "insensitive");
     attron(COLOR_PAIR(4));
     mvaddstr(getmaxy(stdscr)-1, 1, status.str().c_str());
     pad2end();
@@ -127,6 +160,7 @@ void UserInterface::display_status() {
 }
 
 size_t UserInterface::page_count() {
+    if (search_results.empty()) return 1;
     return ceil(search_results.size() / static_cast<float>(max_entry_count()));
 }
 
@@ -211,9 +245,17 @@ size_t UserInterface::move_cursor(HorizontalDirection d) {
 void UserInterface::paint_matched_chars(const std::string &s, size_t row) {
     std::vector<std::pair<size_t, size_t>> indexes;
     if (search_mode == MODE_FUZZY) {
-        indexes = find_indexes_fuzzy(s, query);
+        if (!case_sensitivity) {
+            indexes = find_indexes_fuzzy(to_lowercase(s), to_lowercase(query));
+        } else {
+            indexes = find_indexes_fuzzy(s, query);
+        }
     } else {
-        indexes = find_indexes(s, query);
+        if (!case_sensitivity) {
+            indexes = find_indexes(to_lowercase(s), to_lowercase(query));
+        } else {
+            indexes = find_indexes(s, query);
+        }
     }
     for (auto p : indexes) {
         size_t position = find_position(s, p.first);
