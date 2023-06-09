@@ -102,7 +102,7 @@ void UserInterface::print_history() {
         print(trimmed, idx, 0, is_highlighted ? COLOR_PAIR(3) : COLOR_PAIR(1));
 
         if (!is_highlighted) {
-            paint_matched_chars(*it, idx+1);
+            paint_matched_chars(*it, idx);
         }
     }
 
@@ -202,7 +202,7 @@ void UserInterface::paint_matched_chars(const std::string &s, size_t row) const 
 
     for (auto p : indexes) {
         size_t position = find_position(s, p.first);
-        print(s.substr(p.first, p.second), row, position, COLOR_PAIR(5) | A_BOLD);
+        print(s.substr(p.first, p.second), row, position, COLOR_PAIR(5) | A_BOLD, false);
     }
 }
 
@@ -219,24 +219,11 @@ void UserInterface::display_status() const {
            << "/"
            << page_count()
            << " | "
-           << "mode: ";
-
-    switch (search_mode) {
-        case MODE_EXACT: {
-            status << "exact";
-            break;
-        }
-        case MODE_REGEX: {
-            status << "regex";
-            break;
-        }
-        case MODE_FUZZY: {
-            status << "fuzzy";
-            break;
-        }
-    }
-
-    status << " case: " << (case_sensitivity ? "sensitive" : "insensitive");
+           << "mode: "
+           << get_search_mode_str()
+           << " | "
+           << "case: "
+           << get_case_sensitivity_str();
     print(status.str(), getmaxy(stdscr)-2, 0, COLOR_PAIR(4));
 }
 
@@ -245,10 +232,28 @@ void UserInterface::display_error() const {
     print(std::string(error), last_row, 0, COLOR_PAIR(2) | A_BOLD);
 }
 
-void UserInterface::print(const std::string &s, size_t row, size_t column, int color_pair) const {
+const char *UserInterface::get_search_mode_str() const {
+    switch (search_mode) {
+        case MODE_EXACT: {
+            return "exact";
+        }
+        case MODE_REGEX: {
+            return "regex";
+        }
+        case MODE_FUZZY: {
+            return "fuzzy";
+        }
+    }
+}
+
+const char *UserInterface::get_case_sensitivity_str() const {
+    return case_sensitivity ? "sensitive" : "insensitive";    
+}
+
+void UserInterface::print(const std::string &s, size_t row, size_t column, int color_pair, bool pad) const {
     attron(color_pair);
     mvaddstr(row+1, column+1, s.c_str());
-    pad2end();
+    if (pad) pad2end();
     attroff(color_pair);
 }
 

@@ -39,7 +39,9 @@ private:
     void paint_matched_chars(const std::string &s, size_t row) const;
     void display_status() const;
     void display_error() const;
-    void print(const std::string &s, size_t row, size_t column, int color_pair) const;
+    const char *get_search_mode_str() const;
+    const char *get_case_sensitivity_str() const;
+    void print(const std::string &s, size_t row, size_t column, int color_pair, bool pad = true) const;
     void turn_page(VerticalDirection d);
     void reposition_cursor() const;
     void read_history();
