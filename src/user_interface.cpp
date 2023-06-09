@@ -39,16 +39,17 @@ void UserInterface::search() {
 
 void UserInterface::exact_search() {
     if (query.empty()) {
-        search_results = history;
         print_history();
         return;
     }
+
     std::vector<std::string> results;
     std::string _q = case_sensitivity ? query : to_lowercase(query);
-    for (std::string entry : history) {
-        entry = case_sensitivity ? entry : to_lowercase(entry);
 
-        icu::UnicodeString e(entry.c_str(), "UTF-8");
+    for (std::string entry : history) {
+        std::string _e = case_sensitivity ? entry : to_lowercase(entry);
+
+        icu::UnicodeString e(_e.c_str(), "UTF-8");
         icu::UnicodeString q(_q.c_str(), "UTF-8");
         UErrorCode status = U_ZERO_ERROR;
 
@@ -60,24 +61,27 @@ void UserInterface::exact_search() {
             results.push_back(entry);
         }
     }
+
     search_results = std::move(results);
     print_history();
 }
 
 void UserInterface::fuzzy_search() {
     if (query.empty()) {
-        search_results = history;
         print_history();
         return;
     }
+ 
     std::vector<std::string> results;
     std::string q = case_sensitivity ? query : to_lowercase(query);
+ 
     for (std::string entry : history) {       
-        entry = case_sensitivity ? entry : to_lowercase(entry);
-        if (rapidfuzz::fuzz::partial_ratio(entry, q, 65.0)) {
+        std::string e = case_sensitivity ? entry : to_lowercase(entry);
+        if (rapidfuzz::fuzz::partial_ratio(e, q, 65.0)) {
             results.push_back(entry);
         }
     }
+ 
     search_results = std::move(results);
     print_history();
 }
@@ -85,17 +89,19 @@ void UserInterface::fuzzy_search() {
 void UserInterface::regex_search() {
     std::vector<std::string> results;
     std::string q = case_sensitivity ? query : to_lowercase(query);
+ 
     for (std::string entry : history) {
-        entry = case_sensitivity ? entry : to_lowercase(entry);
+        std::string e = case_sensitivity ? entry : to_lowercase(entry);
         try {
-            if (std::regex_search(entry.cbegin(), entry.cend(), std::regex(q))) {
+            if (std::regex_search(e.cbegin(), e.cend(), std::regex(q))) {
                 results.push_back(entry);
                 error = nullptr;
             }
-        } catch (std::regex_error &e) {
+        } catch (std::regex_error &err) {
             error = "Invalid regex.";
         }
     }
+ 
     search_results = std::move(results);
     print_history();
 }
@@ -103,7 +109,7 @@ void UserInterface::regex_search() {
 void UserInterface::print_history() {
     clear();
 
-    auto [start, end] = find_range(search_results, page);
+    auto [start, end] = find_range(search_results.empty() ? history : search_results, page);
 
     for (auto it = start; it != end; it++) {
         size_t idx = std::distance(start, end) - std::distance(it, end);
@@ -128,13 +134,13 @@ void UserInterface::print(const std::string &s, size_t row, size_t column, int c
     attroff(color_pair);
 }
 
-
 void UserInterface::display_status() {
     if (error) {
         clear();
         display_error();
         return;
     }
+
     std::ostringstream status;
     status << " page: " 
            << page
@@ -142,6 +148,7 @@ void UserInterface::display_status() {
            << page_count()
            << " | "
            << "mode: ";
+
     switch (search_mode) {
         case MODE_EXACT: {
             status << "exact";
@@ -156,6 +163,7 @@ void UserInterface::display_status() {
             break;
         }
     }
+
     status << " case: " << (case_sensitivity ? "sensitive" : "insensitive");
     print(status.str(), getmaxy(stdscr)-2, 0, COLOR_PAIR(4));
 }
