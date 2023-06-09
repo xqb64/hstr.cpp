@@ -69,14 +69,18 @@ std::vector<Index> find_indexes_fuzzy(const std::string &s, const std::string &q
 
     for (size_t i = 0; i < q.length(); ) {
         size_t idx = 0;
+
         while (true) {
             size_t result = s.find(q.substr(i, byte_count(q[i])), idx);
+
             if (result == std::string::npos) {
                 break;
             }
+
             indexes.push_back(std::make_pair(result, byte_count(s[result])));
             idx = result+q.substr(i, byte_count(q[i])).length();
         }
+
         if (!is_continuation_byte(q[i])) {
             i += byte_count(q[i]);
         }
