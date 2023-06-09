@@ -1,4 +1,4 @@
-#include "cursesw.h"
+#include "curses.h"
 #include "user_interface.h"
 #include <string>
 #include <stdint.h>

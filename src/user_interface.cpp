@@ -281,6 +281,7 @@ void UserInterface::reposition_cursor() const {
 
 void UserInterface::read_history() {
     history = read_file("/home/alex/Repositories/hstr/fake_history");
+    search_results = history;
 }
 
 size_t UserInterface::page_count() const {

@@ -1,5 +1,5 @@
 #include "util.h"
-#include "cursesw.h"
+#include "curses.h"
 #include <unicode/unistr.h>
 #include <unicode/ustream.h>
 #include <unicode/locid.h>
