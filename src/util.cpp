@@ -7,6 +7,16 @@
 #include <fstream>
 #include <regex>
 
+size_t char_count(const std::string &s) {
+    size_t total = 0;
+    for (size_t i = 0; i < s.length(); i++) {
+        if (!is_continuation_byte(s[i])) {
+            total++;
+        }
+    }
+    return total;
+}
+
 size_t byte_count(uint8_t c) {
     if (c < 128) return 1;
     else if ((c >> 5) == 0b110) return 2;
@@ -45,7 +55,6 @@ size_t byte_index(std::string s, size_t pos) {
 
     return idx;
 }
-
 
 std::pair<VecIter, VecIter> find_range(const std::vector<std::string> &vec, size_t n) {
     int rows = getmaxy(stdscr) - 2;  /* number of rows on the screen */

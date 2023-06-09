@@ -59,7 +59,7 @@ size_t UserInterface::move_cursor(HorizontalDirection d) {
             break;
         }
         case DIRECTION_RIGHT: {
-            if (cursor_position < query.char_count()) {
+            if (cursor_position < char_count(query)) {
                 cursor_position++;
             }
             break;

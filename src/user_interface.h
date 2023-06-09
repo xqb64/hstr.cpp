@@ -3,7 +3,6 @@
 
 #include <string>
 #include <vector>
-#include "state.h"
 
 enum SearchMode {
     MODE_EXACT = 0,
@@ -53,7 +52,7 @@ private:
     size_t max_entry_length() const;
     std::vector<std::string> search_results;
     std::vector<std::string> history;
-    Query query;
+    std::string query;
     size_t cursor_position = 0;
     size_t page = 1;
     size_t highlighted = 0;
