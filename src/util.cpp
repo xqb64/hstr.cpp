@@ -23,15 +23,18 @@ std::vector<std::string> read_file(const char *path) {
     std::vector<std::string> content;
     std::ifstream stream(path);
     std::string line;
+
     while (std::getline(stream, line)) {
         content.push_back(line);
     }
+
     return content;
 }
 
 size_t byte_index(std::string s, size_t pos) {
     size_t idx = 0;
     size_t current_char = 0;
+
     while (idx < s.length()) {
         if (current_char == pos) break;
         if (!is_continuation_byte(s[idx])) {
@@ -39,11 +42,12 @@ size_t byte_index(std::string s, size_t pos) {
         }
         idx += byte_count(s[idx]);
     }
+
     return idx;
 }
 
 
-std::pair<std::vector<std::string>::const_iterator, std::vector<std::string>::const_iterator> find_range(const std::vector<std::string> &vec, size_t n) {
+std::pair<VecIter, VecIter> find_range(const std::vector<std::string> &vec, size_t n) {
     int rows = getmaxy(stdscr) - 2;  /* number of rows on the screen */
     auto start = vec.cbegin() + (n-1) * rows;
 
@@ -60,8 +64,9 @@ std::string trim_string(const std::string &s, size_t n) {
     return s.substr(0, idx);
 }
 
-std::vector<std::pair<size_t, size_t>> find_indexes_fuzzy(const std::string &s, const std::string &q) {
-    std::vector<std::pair<size_t, size_t>> indexes;
+std::vector<Index> find_indexes_fuzzy(const std::string &s, const std::string &q) {
+    std::vector<Index> indexes;
+
     for (size_t i = 0; i < q.length(); ) {
         size_t idx = 0;
         while (true) {
@@ -76,15 +81,21 @@ std::vector<std::pair<size_t, size_t>> find_indexes_fuzzy(const std::string &s, 
             i += byte_count(q[i]);
         }
     }
+
     return indexes;
 }
 
-std::vector<std::pair<size_t, size_t>> find_indexes(const std::string &s, const std::string &q) {
-    if (q.empty()) return {};
-    std::vector<std::pair<size_t, size_t>> indexes;
+std::vector<Index> find_indexes(const std::string &s, const std::string &q) {
+    if (q.empty()) {
+        return {};
+    }
+
+    std::vector<Index> indexes;
     std::regex r(q);
+
     for (auto it = std::sregex_iterator(s.begin(), s.end(), r); it != std::sregex_iterator(); it++) {
         indexes.push_back(std::make_pair(it->position(), it->length()));
+
     }
     return indexes;
 }
@@ -92,12 +103,14 @@ std::vector<std::pair<size_t, size_t>> find_indexes(const std::string &s, const 
 std::size_t find_position(const std::string &s, size_t idx) {
     size_t i = 0;
     size_t position = 0;
+
     while (i != idx) {
         if (!is_continuation_byte(s[i])) {
             position++;
         }
         i += byte_count(s[i]);
     }
+
     return position;
 }
 
