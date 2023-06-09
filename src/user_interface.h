@@ -29,18 +29,14 @@ public:
     size_t move_cursor(HorizontalDirection d);
     void insert_into_query(std::string s);
     void remove_from_query();
-    void set_error(const char *error);
     void toggle_search_mode();
     void toggle_case_sensitivity();
     void print_history();
+    void set_error(const char *error);
 private:
     void exact_search();
     void regex_search();
     void fuzzy_search();
-    size_t page_count();
-    size_t entry_count();
-    size_t max_entry_count();
-    size_t max_entry_length();
     void paint_matched_chars(const std::string &s, size_t row);
     void display_status();
     void display_error();
@@ -51,6 +47,10 @@ private:
     void init_color_pairs();
     void clear_row(size_t r);
     void pad2end();
+    size_t page_count();
+    size_t entry_count();
+    size_t max_entry_count();
+    size_t max_entry_length();
     std::vector<std::string> search_results;
     std::vector<std::string> history;
     Query query;
