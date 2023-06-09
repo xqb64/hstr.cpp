@@ -44,6 +44,7 @@ private:
     void paint_matched_chars(const std::string &s, size_t row);
     void display_status();
     void display_error();
+    void print(const std::string &s, size_t row, size_t column, int color_pair);
     void turn_page(VerticalDirection d);
     void read_history();
     void reposition_cursor();

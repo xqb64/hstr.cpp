@@ -106,24 +106,32 @@ void UserInterface::regex_search() {
 
 void UserInterface::print_history() {
     clear();
+
     auto [start, end] = find_range(search_results, page);
+
     for (auto it = start; it != end; it++) {
         size_t idx = std::distance(start, end) - std::distance(it, end);
         bool is_highlighted = idx == highlighted;
         std::string trimmed = trim_string(*it, max_entry_length());
-        
-        attron(is_highlighted ? COLOR_PAIR(3) : COLOR_PAIR(1));
-        mvaddstr(idx+1, 1, trimmed.c_str());
-        pad2end();
-        attroff(is_highlighted ? COLOR_PAIR(3) : COLOR_PAIR(1));
+
+        print(trimmed, idx, 0, is_highlighted ? COLOR_PAIR(3) : COLOR_PAIR(1));
 
         if (!is_highlighted) {
             paint_matched_chars(*it, idx+1);
         }
     }
+
     display_status();
     reposition_cursor();
 }
+
+void UserInterface::print(const std::string &s, size_t row, size_t column, int color_pair) {
+    attron(color_pair);
+    mvaddstr(row+1, column+1, s.c_str());
+    pad2end();
+    attroff(color_pair);
+}
+
 
 void UserInterface::display_status() {
     if (error) {
@@ -153,10 +161,7 @@ void UserInterface::display_status() {
         }
     }
     status << " case: " << (case_sensitivity ? "sensitive" : "insensitive");
-    attron(COLOR_PAIR(4));
-    mvaddstr(getmaxy(stdscr)-1, 1, status.str().c_str());
-    pad2end();
-    attroff(COLOR_PAIR(4));
+    print(status.str(), getmaxy(stdscr)-2, 0, COLOR_PAIR(4));
 }
 
 size_t UserInterface::page_count() {
@@ -244,6 +249,7 @@ size_t UserInterface::move_cursor(HorizontalDirection d) {
 
 void UserInterface::paint_matched_chars(const std::string &s, size_t row) {
     std::vector<std::pair<size_t, size_t>> indexes;
+
     if (search_mode == MODE_FUZZY) {
         if (!case_sensitivity) {
             indexes = find_indexes_fuzzy(to_lowercase(s), to_lowercase(query));
@@ -257,11 +263,10 @@ void UserInterface::paint_matched_chars(const std::string &s, size_t row) {
             indexes = find_indexes(s, query);
         }
     }
+
     for (auto p : indexes) {
         size_t position = find_position(s, p.first);
-        attron(COLOR_PAIR(5) | A_BOLD);
-        mvaddstr(row, position+1, s.substr(p.first, p.second).c_str());
-        attroff(COLOR_PAIR(5) | A_BOLD);
+        print(s.substr(p.first, p.second), row, position, COLOR_PAIR(5) | A_BOLD);
     }
 }
 
@@ -284,11 +289,8 @@ void UserInterface::remove_from_query() {
 }
 
 void UserInterface::display_error() {
-    size_t last_row = getmaxy(stdscr)-1;
-    attron(COLOR_PAIR(2) | A_BOLD);
-    mvaddstr(last_row, 1, error);
-    pad2end();
-    attroff(COLOR_PAIR(2) | A_BOLD);
+    size_t last_row = getmaxy(stdscr)-2;
+    print(std::string(error), last_row, 0, COLOR_PAIR(2) | A_BOLD);
 }
 
 void UserInterface::init_color_pairs() {
