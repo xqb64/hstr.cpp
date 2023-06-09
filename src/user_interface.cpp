@@ -23,14 +23,10 @@ void UserInterface::read_history() {
 
 void UserInterface::toggle_search_mode() {
     search_mode = static_cast<SearchMode>((search_mode + 1) % 3);
-    search();
-    display_status();
 }
 
 void UserInterface::toggle_case_sensitivity() {
     case_sensitivity = !case_sensitivity;
-    search();
-    display_status();
 }
 
 void UserInterface::search() {

@@ -42,10 +42,12 @@ int main() {
             }
             case CTRL_E: {
                 user_interface.toggle_search_mode();
+                user_interface.search();
                 break;
             }
             case CTRL_T: {
                 user_interface.toggle_case_sensitivity();
+                user_interface.search();
                 break;
             }
             case KEY_BACKSPACE: {
