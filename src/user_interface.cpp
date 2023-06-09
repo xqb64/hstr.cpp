@@ -183,7 +183,7 @@ void UserInterface::fuzzy_search() {
     print_history();
 }
 
-void UserInterface::paint_matched_chars(const std::string &s, size_t row) {
+void UserInterface::paint_matched_chars(const std::string &s, size_t row) const {
     std::vector<std::pair<size_t, size_t>> indexes;
 
     if (search_mode == MODE_FUZZY) {
@@ -206,7 +206,7 @@ void UserInterface::paint_matched_chars(const std::string &s, size_t row) {
     }
 }
 
-void UserInterface::display_status() {
+void UserInterface::display_status() const {
     if (error) {
         clear();
         display_error();
@@ -240,12 +240,12 @@ void UserInterface::display_status() {
     print(status.str(), getmaxy(stdscr)-2, 0, COLOR_PAIR(4));
 }
 
-void UserInterface::display_error() {
+void UserInterface::display_error() const {
     size_t last_row = getmaxy(stdscr)-2;
     print(std::string(error), last_row, 0, COLOR_PAIR(2) | A_BOLD);
 }
 
-void UserInterface::print(const std::string &s, size_t row, size_t column, int color_pair) {
+void UserInterface::print(const std::string &s, size_t row, size_t column, int color_pair) const {
     attron(color_pair);
     mvaddstr(row+1, column+1, s.c_str());
     pad2end();
@@ -273,7 +273,7 @@ void UserInterface::turn_page(VerticalDirection d) {
     }
 }
 
-void UserInterface::reposition_cursor() {
+void UserInterface::reposition_cursor() const {
     clear_row(0);
     mvaddstr(0, 1, query.c_str());
     mvaddstr(0, 1, query.substr(0, byte_index(query, cursor_position)).c_str());
@@ -283,12 +283,12 @@ void UserInterface::read_history() {
     history = read_file("/home/alex/Repositories/hstr/fake_history");
 }
 
-size_t UserInterface::page_count() {
+size_t UserInterface::page_count() const {
     if (search_results.empty()) return 1;
     return ceil(search_results.size() / static_cast<float>(max_entry_count()));
 }
 
-void UserInterface::init_color_pairs() {
+void UserInterface::init_color_pairs() const {
     start_color();
     init_pair(1, COLOR_WHITE, COLOR_BLACK);
     init_pair(2, COLOR_WHITE, COLOR_RED);
@@ -297,12 +297,12 @@ void UserInterface::init_color_pairs() {
     init_pair(5, COLOR_RED, COLOR_BLACK);
 }
 
-void UserInterface::clear_row(size_t r) {
+void UserInterface::clear_row(size_t r) const {
     move(r, 0);
     clrtoeol();
 }
 
-void UserInterface::pad2end() {
+void UserInterface::pad2end() const {
     int y, x;
     getyx(stdscr, y, x);
     int max_x = getmaxx(stdscr);
@@ -312,15 +312,15 @@ void UserInterface::pad2end() {
     }
 }
 
-size_t UserInterface::max_entry_count() {
+size_t UserInterface::max_entry_count() const {
     return getmaxy(stdscr) - 2;
 }
 
-size_t UserInterface::max_entry_length() {
+size_t UserInterface::max_entry_length() const {
     return getmaxx(stdscr) - 2;
 }
 
-size_t UserInterface::entry_count() {
+size_t UserInterface::entry_count() const {
     auto [start, end] = find_range(search_results, page);
     return end - start;
 }

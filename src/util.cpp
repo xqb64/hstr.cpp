@@ -43,13 +43,13 @@ size_t byte_index(std::string s, size_t pos) {
 }
 
 
-std::pair<std::vector<std::string>::iterator, std::vector<std::string>::iterator> find_range(std::vector<std::string> &vec, size_t n) {
+std::pair<std::vector<std::string>::const_iterator, std::vector<std::string>::const_iterator> find_range(const std::vector<std::string> &vec, size_t n) {
     int rows = getmaxy(stdscr) - 2;  /* number of rows on the screen */
-    auto start = vec.begin() + (n-1) * rows;
+    auto start = vec.cbegin() + (n-1) * rows;
 
     int last_n = 0;  /* last n rows after splitting the history equally */
     for ( ; last_n != rows; last_n++) {
-        if (start + last_n == vec.end()) break;
+        if (start + last_n == vec.cend()) break;
     }
 
     return std::make_pair(start, start + last_n);
