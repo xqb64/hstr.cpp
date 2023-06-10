@@ -6,6 +6,8 @@
 
 const int CTRL_E = 5;
 const int CTRL_T = 20;
+const int TAB = 9;
+const int ENTER = 10;
 
 int main() {
     setlocale(LC_ALL, "");
@@ -64,6 +66,14 @@ int main() {
                 user_interface.print_history();
                 break;
             }
+            case TAB: {
+                user_interface.echo();
+                goto teardown;
+            }
+            case ENTER: {
+                user_interface.echo(true);
+                goto teardown;
+            }
             default: {
                 tmp.push_back(user_input);
                 if (utf8::is_valid(tmp)) {
@@ -79,5 +89,9 @@ int main() {
             }
         }
     }
-    endwin();
+teardown:
+        clear();
+        refresh();
+        doupdate();
+        endwin();
 }

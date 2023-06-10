@@ -23,6 +23,7 @@ enum HorizontalDirection {
 class UserInterface {
 public:
     UserInterface();
+    void echo(bool newline = false);
     void search();
     void move_highlighted(VerticalDirection d);
     size_t move_cursor(HorizontalDirection d);

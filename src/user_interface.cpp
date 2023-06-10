@@ -10,11 +10,33 @@
 #include "curses.h"
 #include "user_interface.h"
 #include "util.h"
+#include <sys/ioctl.h>
+#include <termios.h>
+#include <errno.h>
 
 UserInterface::UserInterface() {
     init_color_pairs();
     read_history();
     search();
+}
+
+void UserInterface::echo(bool newline) {
+    auto [start, end] = find_range(search_results, page);
+    auto entry = start + highlighted;
+    for (auto byte : *entry) {
+        int status = ioctl(0, TIOCSTI, &byte);
+        if (status) {
+            set_error(std::to_string(errno).c_str());
+            display_error();
+        }
+    }
+    if (newline) {
+        int status = ioctl(0, TIOCSTI, "\n");
+        if (status) {
+            set_error(std::to_string(errno).c_str());
+            display_error();
+        }
+    }
 }
 
 void UserInterface::search() {
