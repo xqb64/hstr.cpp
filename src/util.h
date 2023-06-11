@@ -20,4 +20,16 @@ std::vector<Index> find_indexes_fuzzy(const std::string &s, const std::string &q
 std::size_t find_position(const std::string &s, size_t idx);
 std::string to_lowercase(const std::string &s);
 
+#define IOCTL(fd, cmd, byte) \
+do { \
+    int status = ioctl((fd), (cmd), (byte)); \
+    if (status) { \
+        std::ostringstream s; \
+        s << "ioctl err: "; \
+        s << errno; \
+        set_error(s.str().c_str()); \
+        display_error(); \
+    } \
+} while (false)
+
 #endif

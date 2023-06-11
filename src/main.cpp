@@ -74,6 +74,16 @@ int main() {
                 user_interface.echo(true);
                 goto teardown;
             }
+            case KEY_PPAGE: {
+                user_interface.turn_page(DIRECTION_UP);
+                user_interface.print_history();
+                break;
+            }
+            case KEY_NPAGE: {
+                user_interface.turn_page(DIRECTION_DOWN);
+                user_interface.print_history();
+                break;
+            }
             default: {
                 tmp.push_back(user_input);
                 if (utf8::is_valid(tmp)) {

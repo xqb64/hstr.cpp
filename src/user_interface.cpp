@@ -21,21 +21,12 @@ UserInterface::UserInterface() {
 }
 
 void UserInterface::echo(bool newline) {
-    auto [start, end] = find_range(search_results, page);
-    auto entry = start + highlighted;
-    for (auto byte : *entry) {
-        int status = ioctl(0, TIOCSTI, &byte);
-        if (status) {
-            set_error(std::to_string(errno).c_str());
-            display_error();
-        }
+    std::string current_entry = get_highlighted_entry();
+    for (auto byte : current_entry) {
+        IOCTL(0, TIOCSTI, &byte);
     }
     if (newline) {
-        int status = ioctl(0, TIOCSTI, "\n");
-        if (status) {
-            set_error(std::to_string(errno).c_str());
-            display_error();
-        }
+        IOCTL(0, TIOCSTI, "\n");
     }
 }
 
@@ -48,6 +39,9 @@ void UserInterface::search() {
 }
 
 void UserInterface::move_highlighted(VerticalDirection d) {
+    size_t old_highlighted_index = highlighted;
+    std::string old_highlighted_entry = get_highlighted_entry();
+    size_t old_page = page;
     switch (d) {
         case DIRECTION_UP: {
             if (highlighted > 0) {
@@ -68,7 +62,13 @@ void UserInterface::move_highlighted(VerticalDirection d) {
             break;
         }
     }
-    print_history();
+    if (page == old_page) {
+        paint_highlighted(old_highlighted_entry, old_highlighted_index);
+    } else {
+        print_history();
+    }
+    display_status();
+    reposition_cursor();
 }
 
 size_t UserInterface::move_cursor(HorizontalDirection d) {
@@ -103,6 +103,27 @@ void UserInterface::remove_from_query() {
     reposition_cursor();
 }
 
+void UserInterface::turn_page(VerticalDirection d) {
+    clear();
+    switch (d) {
+        case DIRECTION_UP: {
+            if (page > 1) { 
+                page--;
+            } else {
+                page = page_count();
+            }
+            break;
+        }
+        case DIRECTION_DOWN: {
+            if (page < page_count()) {
+                page++;
+            } else {
+                page = 1;
+            }
+        }
+    }
+}
+
 void UserInterface::toggle_search_mode() {
     search_mode = static_cast<SearchMode>((search_mode + 1) % 3);
 }
@@ -119,9 +140,8 @@ void UserInterface::print_history() {
     for (auto it = start; it != end; it++) {
         size_t idx = std::distance(start, end) - std::distance(it, end);
         bool is_highlighted = idx == highlighted;
-        std::string trimmed = trim_string(*it, max_entry_length());
 
-        print(trimmed, idx, 0, is_highlighted ? COLOR_PAIR(3) : COLOR_PAIR(1));
+        print(*it, idx, 0, is_highlighted ? COLOR_PAIR(3) : COLOR_PAIR(1));
 
         if (!is_highlighted) {
             paint_matched_chars(*it, idx);
@@ -228,6 +248,11 @@ void UserInterface::paint_matched_chars(const std::string &s, size_t row) const 
     }
 }
 
+void UserInterface::paint_highlighted(const std::string &old_s, size_t old_row) {
+    print(old_s, old_row, 0, COLOR_PAIR(1));
+    print(get_highlighted_entry(), highlighted, 0, COLOR_PAIR(3));
+}
+
 void UserInterface::display_status() const {
     if (error) {
         clear();
@@ -245,13 +270,15 @@ void UserInterface::display_status() const {
            << get_search_mode_str()
            << " | "
            << "case: "
-           << get_case_sensitivity_str();
-    print(status.str(), getmaxy(stdscr)-2, 0, COLOR_PAIR(4));
+           << get_case_sensitivity_str() 
+           << " | "
+           << "highlighted: "
+           << highlighted;
+    print(status.str(), max_entry_count(), 0, COLOR_PAIR(4));
 }
 
 void UserInterface::display_error() const {
-    size_t last_row = getmaxy(stdscr)-2;
-    print(std::string(error), last_row, 0, COLOR_PAIR(2) | A_BOLD);
+    print(std::string(error), max_entry_count(), 0, COLOR_PAIR(2) | A_BOLD);
 }
 
 const char *UserInterface::get_search_mode_str() const {
@@ -274,33 +301,12 @@ const char *UserInterface::get_case_sensitivity_str() const {
 
 void UserInterface::print(const std::string &s, size_t row, size_t column, int color_pair, bool pad) const {
     attron(color_pair);
-    mvaddstr(row+1, column+1, s.c_str());
+    mvaddstr(row+1, column+1, trim_string(s, max_entry_length()).c_str());
     if (pad) pad2end();
     attroff(color_pair);
 }
 
-void UserInterface::turn_page(VerticalDirection d) {
-    clear();
-    switch (d) {
-        case DIRECTION_UP: {
-            if (page > 1) { 
-                page--;
-            } else {
-                page = page_count();
-            }
-            break;
-        }
-        case DIRECTION_DOWN: {
-            if (page < page_count()) {
-                page++;
-            } else {
-                page = 1;
-            }
-        }
-    }
-}
-
-void UserInterface::reposition_cursor() const {
+inline void UserInterface::reposition_cursor() const {
     clear_row(0);
     mvaddstr(0, 1, query.c_str());
     mvaddstr(0, 1, query.substr(0, byte_index(query, cursor_position)).c_str());
@@ -340,15 +346,21 @@ void UserInterface::pad2end() const {
     }
 }
 
-size_t UserInterface::max_entry_count() const {
+inline std::string UserInterface::get_highlighted_entry() {
+    auto [start, end] = find_range(search_results, page);
+    auto entry = start + highlighted;
+    return *entry;
+}
+
+inline size_t UserInterface::max_entry_count() const {
     return getmaxy(stdscr) - 2;
 }
 
-size_t UserInterface::max_entry_length() const {
+inline size_t UserInterface::max_entry_length() const {
     return getmaxx(stdscr) - 2;
 }
 
-size_t UserInterface::entry_count() const {
+inline size_t UserInterface::entry_count() const {
     auto [start, end] = find_range(search_results, page);
     return end - start;
 }
