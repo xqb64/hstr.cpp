@@ -3,6 +3,12 @@
 
 #include <string>
 #include <vector>
+#include <optional>
+
+enum Printed {
+    HISTORY,
+    SEARCH_RESULTS,
+};
 
 enum SearchMode {
     MODE_EXACT = 0,
@@ -26,13 +32,15 @@ public:
     void echo(bool newline = false);
     void search();
     void move_highlighted(VerticalDirection d);
-    size_t move_cursor(HorizontalDirection d);
+    void move_cursor(HorizontalDirection d);
+    size_t get_cursor_position() { return cursor_position; }
     void insert_into_query(std::string s);
     void remove_from_query();
     void turn_page(VerticalDirection d);
     void toggle_search_mode();
     void toggle_case_sensitivity();
-    void print_history();
+    void print_history(const std::vector<std::string> &cont);
+    void reprint();
     void set_error(const char *error);
 private:
     void exact_search();
@@ -64,6 +72,7 @@ private:
     const char *error = NULL;
     SearchMode search_mode = MODE_EXACT;
     bool case_sensitivity = false;
+    Printed printed = HISTORY;  
 };
 
 #endif

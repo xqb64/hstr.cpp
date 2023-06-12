@@ -65,14 +65,13 @@ void UserInterface::move_highlighted(VerticalDirection d) {
     if (page == old_page) {
         paint_highlighted(old_highlighted_entry, old_highlighted_index);
     } else {
-        print_history();
+        reprint();
     }
     display_status();
     reposition_cursor();
 }
 
-size_t UserInterface::move_cursor(HorizontalDirection d) {
-    size_t old_position = cursor_position;
+void UserInterface::move_cursor(HorizontalDirection d) {
     switch (d) {
         case DIRECTION_LEFT: {
             if (cursor_position > 0) {
@@ -88,7 +87,6 @@ size_t UserInterface::move_cursor(HorizontalDirection d) {
         }
     }
     reposition_cursor();
-    return old_position;
 }
 
 void UserInterface::insert_into_query(std::string s) {
@@ -122,6 +120,7 @@ void UserInterface::turn_page(VerticalDirection d) {
             }
         }
     }
+    reprint();
 }
 
 void UserInterface::toggle_search_mode() {
@@ -132,12 +131,18 @@ void UserInterface::toggle_case_sensitivity() {
     case_sensitivity = !case_sensitivity;
 }
 
-void UserInterface::print_history() {
+void UserInterface::print_history(const std::vector<std::string> &cont) {
     clear();
 
-    auto [start, end] = find_range(search_results.empty() ? history : search_results, page);
+    if (cont == history) {
+        printed = HISTORY;
+    } else if (cont == search_results) {
+        printed = SEARCH_RESULTS;
+    }
 
-    for (auto it = start; it != end; it++) {
+    auto [start, end] = find_range(printed == HISTORY ? history : search_results, page);
+
+    for (auto it = start; it != end; ++it) {
         size_t idx = std::distance(start, end) - std::distance(it, end);
         bool is_highlighted = idx == highlighted;
 
@@ -152,24 +157,33 @@ void UserInterface::print_history() {
     reposition_cursor();
 }
 
+void UserInterface::reprint() {
+    if (printed == HISTORY) {
+        print_history(history);
+    } else {
+        print_history(search_results);
+    }
+}
+
 void UserInterface::set_error(const char *err) {
     error = err;
 }
 
 void UserInterface::exact_search() {
     if (query.empty()) {
-        print_history();
+        print_history(history);
         return;
     }
 
     std::vector<std::string> results;
     std::string _q = case_sensitivity ? query : to_lowercase(query);
 
-    for (std::string entry : history) {
+    for (const std::string &entry : history) {
         std::string _e = case_sensitivity ? entry : to_lowercase(entry);
 
         icu::UnicodeString e(_e.c_str(), "UTF-8");
         icu::UnicodeString q(_q.c_str(), "UTF-8");
+       
         UErrorCode status = U_ZERO_ERROR;
 
         icu::StringSearch search(q, e, icu::Locale::getRoot(), NULL, status);
@@ -182,14 +196,14 @@ void UserInterface::exact_search() {
     }
 
     search_results = std::move(results);
-    print_history();
+    print_history(search_results);
 }
 
 void UserInterface::regex_search() {
     std::vector<std::string> results;
     std::string q = case_sensitivity ? query : to_lowercase(query);
  
-    for (std::string entry : history) {
+    for (const std::string &entry : history) {
         std::string e = case_sensitivity ? entry : to_lowercase(entry);
         try {
             if (std::regex_search(e.cbegin(), e.cend(), std::regex(q))) {
@@ -202,19 +216,19 @@ void UserInterface::regex_search() {
     }
  
     search_results = std::move(results);
-    print_history();
+    print_history(search_results);
 }
 
 void UserInterface::fuzzy_search() {
     if (query.empty()) {
-        print_history();
+        print_history(history);
         return;
     }
  
     std::vector<std::string> results;
     std::string q = case_sensitivity ? query : to_lowercase(query);
  
-    for (std::string entry : history) {       
+    for (const std::string &entry : history) {       
         std::string e = case_sensitivity ? entry : to_lowercase(entry);
         if (rapidfuzz::fuzz::partial_ratio(e, q, 65.0)) {
             results.push_back(entry);
@@ -222,27 +236,42 @@ void UserInterface::fuzzy_search() {
     }
  
     search_results = std::move(results);
-    print_history();
+    print_history(search_results);
 }
 
 void UserInterface::paint_matched_chars(const std::string &s, size_t row) const {
-    std::vector<std::pair<size_t, size_t>> indexes;
+    std::optional<std::vector<Index>> indexes;
 
-    if (search_mode == MODE_FUZZY) {
-        if (!case_sensitivity) {
-            indexes = find_indexes_fuzzy(to_lowercase(s), to_lowercase(query));
-        } else {
-            indexes = find_indexes_fuzzy(s, query);
+    switch (search_mode) {
+        case MODE_EXACT: {
+            if (!case_sensitivity) {
+                indexes = find_indexes_exact(to_lowercase(s), to_lowercase(query));
+            } else {
+                indexes = find_indexes_exact(s, query);
+            }
+            break;
         }
-    } else {
-        if (!case_sensitivity) {
-            indexes = find_indexes(to_lowercase(s), to_lowercase(query));
-        } else {
-            indexes = find_indexes(s, query);
+        case MODE_FUZZY: {
+            if (!case_sensitivity) {
+                indexes = find_indexes_fuzzy(to_lowercase(s), to_lowercase(query));
+            } else {
+                indexes = find_indexes_fuzzy(s, query);
+            }
+            break;
+        }
+        case MODE_REGEX: {
+            if (!case_sensitivity) {
+                indexes = find_indexes_regex(to_lowercase(s), to_lowercase(query));
+            } else {
+                indexes = find_indexes_regex(s, query);
+            }
+            break;            
         }
     }
 
-    for (auto p : indexes) {
+    if (!indexes) return;
+
+    for (auto p : *indexes) {
         size_t position = find_position(s, p.first);
         print(s.substr(p.first, p.second), row, position, COLOR_PAIR(5) | A_BOLD, false);
     }
@@ -250,6 +279,7 @@ void UserInterface::paint_matched_chars(const std::string &s, size_t row) const 
 
 void UserInterface::paint_highlighted(const std::string &old_s, size_t old_row) {
     print(old_s, old_row, 0, COLOR_PAIR(1));
+    paint_matched_chars(old_s, old_row);
     print(get_highlighted_entry(), highlighted, 0, COLOR_PAIR(3));
 }
 
@@ -270,10 +300,8 @@ void UserInterface::display_status() const {
            << get_search_mode_str()
            << " | "
            << "case: "
-           << get_case_sensitivity_str() 
-           << " | "
-           << "highlighted: "
-           << highlighted;
+           << get_case_sensitivity_str();
+
     print(status.str(), max_entry_count(), 0, COLOR_PAIR(4));
 }
 

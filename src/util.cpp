@@ -1,5 +1,6 @@
 #include "util.h"
 #include "curses.h"
+#include <iostream>
 #include <unicode/unistr.h>
 #include <unicode/ustream.h>
 #include <unicode/locid.h>
@@ -98,18 +99,42 @@ std::vector<Index> find_indexes_fuzzy(const std::string &s, const std::string &q
     return indexes;
 }
 
-std::vector<Index> find_indexes(const std::string &s, const std::string &q) {
+std::optional<std::vector<Index>> find_indexes_exact(const std::string &s, const std::string &q) {
     if (q.empty()) {
-        return {};
+        return std::nullopt;
     }
 
     std::vector<Index> indexes;
-    std::regex r(q);
+    size_t idx = 0;
+
+    while (idx < s.length()) {
+        size_t result = s.find(q, idx);
+        if (result == std::string::npos) break;
+        indexes.emplace_back(result, q.length());
+        idx = result + byte_count(s[result]);
+    }
+
+    return indexes;
+}
+
+std::optional<std::vector<Index>> find_indexes_regex(const std::string &s, const std::string &q) {
+    if (q.empty()) {
+        return std::optional<std::vector<Index>>{};
+    }
+
+    std::vector<Index> indexes;
+    std::regex r;
+
+    try {
+        r = std::regex(q);
+    } catch (std::regex_error &err) {
+        return std::nullopt;
+    }
 
     for (auto it = std::sregex_iterator(s.begin(), s.end(), r); it != std::sregex_iterator(); it++) {
         indexes.push_back(std::make_pair(it->position(), it->length()));
-
     }
+
     return indexes;
 }
 
