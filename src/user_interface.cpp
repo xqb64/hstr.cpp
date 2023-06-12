@@ -39,9 +39,10 @@ void UserInterface::search() {
 }
 
 void UserInterface::move_highlighted(VerticalDirection d) {
-    size_t old_highlighted_index = highlighted;
     std::string old_highlighted_entry = get_highlighted_entry();
+    size_t old_highlighted_index = highlighted;
     size_t old_page = page;
+
     switch (d) {
         case DIRECTION_UP: {
             if (highlighted > 0) {
@@ -62,11 +63,13 @@ void UserInterface::move_highlighted(VerticalDirection d) {
             break;
         }
     }
+
     if (page == old_page) {
         paint_highlighted(old_highlighted_entry, old_highlighted_index);
     } else {
         reprint();
     }
+
     display_status();
     reposition_cursor();
 }
@@ -131,16 +134,12 @@ void UserInterface::toggle_case_sensitivity() {
     case_sensitivity = !case_sensitivity;
 }
 
-void UserInterface::print_history(const std::vector<std::string> &cont) {
+void UserInterface::print_lines(const std::vector<std::string> &lines) {
     clear();
 
-    if (cont == history) {
-        printed = HISTORY;
-    } else if (cont == search_results) {
-        printed = SEARCH_RESULTS;
-    }
+    display_mode = lines == history ? HISTORY : SEARCH_RESULTS;
 
-    auto [start, end] = find_range(printed == HISTORY ? history : search_results, page);
+    auto [start, end] = find_range(determine_container(), page);
 
     for (auto it = start; it != end; ++it) {
         size_t idx = std::distance(start, end) - std::distance(it, end);
@@ -158,11 +157,7 @@ void UserInterface::print_history(const std::vector<std::string> &cont) {
 }
 
 void UserInterface::reprint() {
-    if (printed == HISTORY) {
-        print_history(history);
-    } else {
-        print_history(search_results);
-    }
+    print_lines(determine_container());
 }
 
 void UserInterface::set_error(const char *err) {
@@ -171,7 +166,7 @@ void UserInterface::set_error(const char *err) {
 
 void UserInterface::exact_search() {
     if (query.empty()) {
-        print_history(history);
+        print_lines(history);
         return;
     }
 
@@ -196,7 +191,7 @@ void UserInterface::exact_search() {
     }
 
     search_results = std::move(results);
-    print_history(search_results);
+    print_lines(search_results);
 }
 
 void UserInterface::regex_search() {
@@ -216,12 +211,12 @@ void UserInterface::regex_search() {
     }
  
     search_results = std::move(results);
-    print_history(search_results);
+    print_lines(search_results);
 }
 
 void UserInterface::fuzzy_search() {
     if (query.empty()) {
-        print_history(history);
+        print_lines(history);
         return;
     }
  
@@ -236,7 +231,7 @@ void UserInterface::fuzzy_search() {
     }
  
     search_results = std::move(results);
-    print_history(search_results);
+    print_lines(search_results);
 }
 
 void UserInterface::paint_matched_chars(const std::string &s, size_t row) const {
@@ -391,4 +386,8 @@ inline size_t UserInterface::max_entry_length() const {
 inline size_t UserInterface::entry_count() const {
     auto [start, end] = find_range(search_results, page);
     return end - start;
+}
+
+const std::vector<std::string> &UserInterface::determine_container() const {
+    return display_mode == HISTORY ? history : search_results;
 }

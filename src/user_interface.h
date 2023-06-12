@@ -5,7 +5,7 @@
 #include <vector>
 #include <optional>
 
-enum Printed {
+enum DisplayMode {
     HISTORY,
     SEARCH_RESULTS,
 };
@@ -39,7 +39,7 @@ public:
     void turn_page(VerticalDirection d);
     void toggle_search_mode();
     void toggle_case_sensitivity();
-    void print_history(const std::vector<std::string> &cont);
+    void print_lines(const std::vector<std::string> &lines);
     void reprint();
     void set_error(const char *error);
 private:
@@ -63,6 +63,7 @@ private:
     size_t entry_count() const;
     size_t max_entry_count() const;
     size_t max_entry_length() const;
+    const std::vector<std::string> &determine_container() const;
     std::vector<std::string> search_results;
     std::vector<std::string> history;
     std::string query;
@@ -72,7 +73,7 @@ private:
     const char *error = NULL;
     SearchMode search_mode = MODE_EXACT;
     bool case_sensitivity = false;
-    Printed printed = HISTORY;  
+    DisplayMode display_mode = HISTORY;  
 };
 
 #endif
