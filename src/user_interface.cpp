@@ -308,6 +308,7 @@ const char *UserInterface::get_search_mode_str() const {
         case MODE_FUZZY: {
             return "fuzzy";
         }
+        default: throw std::runtime_error("Not implemented.");
     }
 }
 
