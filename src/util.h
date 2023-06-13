@@ -18,7 +18,7 @@ std::pair<VecIter, VecIter> find_range(const std::vector<std::string> &vec, size
 std::string trim_string(const std::string &s, size_t n);
 std::optional<std::vector<Index>> find_indexes_exact(const std::string &s, const std::string &q);
 std::optional<std::vector<Index>> find_indexes_regex(const std::string &s, const std::string &q);
-std::vector<Index> find_indexes_fuzzy(const std::string &s, const std::string &q);
+std::optional<std::vector<Index>> find_indexes_fuzzy(const std::string &s, const std::string &q);
 std::size_t find_position(const std::string &s, size_t idx);
 std::string to_lowercase(const std::string &s);
 

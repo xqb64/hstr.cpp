@@ -235,31 +235,29 @@ void UserInterface::fuzzy_search() {
 }
 
 void UserInterface::paint_matched_chars(const std::string &s, size_t row) const {
+    if (query.empty()) return;
+  
+    std::string _s(s);
+    std::string _q(query);
+    
+    if (!case_sensitivity) {
+        _s = to_lowercase(_s);
+        _q = to_lowercase(_q);
+    }
+
     std::optional<std::vector<Index>> indexes;
 
     switch (search_mode) {
         case MODE_EXACT: {
-            if (!case_sensitivity) {
-                indexes = find_indexes_exact(to_lowercase(s), to_lowercase(query));
-            } else {
-                indexes = find_indexes_exact(s, query);
-            }
+            indexes = find_indexes_exact(_s, _q);
             break;
         }
         case MODE_FUZZY: {
-            if (!case_sensitivity) {
-                indexes = find_indexes_fuzzy(to_lowercase(s), to_lowercase(query));
-            } else {
-                indexes = find_indexes_fuzzy(s, query);
-            }
+            indexes = find_indexes_fuzzy(_s, _q);
             break;
         }
         case MODE_REGEX: {
-            if (!case_sensitivity) {
-                indexes = find_indexes_regex(to_lowercase(s), to_lowercase(query));
-            } else {
-                indexes = find_indexes_regex(s, query);
-            }
+            indexes = find_indexes_regex(_s, _q);
             break;            
         }
     }
