@@ -137,7 +137,7 @@ void UserInterface::print_lines(const std::vector<std::string> &lines) {
 
     display_mode = lines == history ? HISTORY : SEARCH_RESULTS;
 
-    auto [start, end] = find_range(determine_container(), page);
+    auto [start, end] = find_range(determine_container(), page, max_entry_count());
 
     for (auto it = start; it != end; ++it) {
         size_t idx = std::distance(start, end) - std::distance(it, end);
@@ -365,7 +365,7 @@ void UserInterface::pad2end() const {
 }
 
 inline std::string UserInterface::get_highlighted_entry() {
-    auto [start, end] = find_range(search_results, page);
+    auto [start, end] = find_range(search_results, page, max_entry_count());
     auto entry = start + highlighted;
     return *entry;
 }
@@ -379,7 +379,7 @@ inline size_t UserInterface::max_entry_length() const {
 }
 
 inline size_t UserInterface::entry_count() const {
-    auto [start, end] = find_range(search_results, page);
+    auto [start, end] = find_range(search_results, page, max_entry_count());
     return end - start;
 }
 

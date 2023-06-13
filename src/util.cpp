@@ -1,12 +1,11 @@
-#include "util.h"
-#include "curses.h"
+#include <fstream>
 #include <iostream>
+#include <regex>
+#include <stdexcept>
 #include <unicode/unistr.h>
 #include <unicode/ustream.h>
 #include <unicode/locid.h>
-#include <stdexcept>
-#include <fstream>
-#include <regex>
+#include "util.h"
 
 size_t char_count(const std::string &s) {
     size_t total = 0;
@@ -57,11 +56,10 @@ size_t byte_index(std::string s, size_t pos) {
     return idx;
 }
 
-std::pair<VecIter, VecIter> find_range(const std::vector<std::string> &vec, size_t n) {
-    int rows = getmaxy(stdscr) - 2;  /* number of rows on the screen */
-    auto start = vec.cbegin() + (n-1) * rows;
+std::pair<VecIter, VecIter> find_range(const std::vector<std::string> &vec, size_t page, size_t rows) {
+    auto start = vec.cbegin() + (page-1) * rows;
 
-    int last_n = 0;  /* last n rows after splitting the history equally */
+    size_t last_n = 0;  /* last n rows after splitting the history equally */
     for ( ; last_n != rows; last_n++) {
         if (start + last_n == vec.cend()) break;
     }

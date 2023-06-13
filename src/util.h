@@ -14,7 +14,7 @@ size_t char_count(const std::string &s);
 bool is_continuation_byte(uint8_t c);
 std::vector<std::string> read_file(const char *path);
 size_t byte_index(std::string s, size_t pos);
-std::pair<VecIter, VecIter> find_range(const std::vector<std::string> &vec, size_t n);
+std::pair<VecIter, VecIter> find_range(const std::vector<std::string> &vec, size_t page, size_t rows);
 std::string trim_string(const std::string &s, size_t n);
 std::optional<std::vector<Index>> find_indexes_exact(const std::string &s, const std::string &q);
 std::optional<std::vector<Index>> find_indexes_regex(const std::string &s, const std::string &q);

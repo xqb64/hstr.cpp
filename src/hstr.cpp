@@ -1,5 +1,4 @@
 #include <string>
-#include <stdint.h>
 #include <utf8.h>
 #include "curses.h"
 #include "hstr.h"
