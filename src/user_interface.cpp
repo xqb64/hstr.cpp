@@ -2,8 +2,6 @@
 #include <sstream>
 #include <regex>
 #include <sys/ioctl.h>
-#include <termios.h>
-#include <errno.h>
 #include <rapidfuzz/fuzz.hpp>
 #include <unicode/unistr.h>
 #include <unicode/locid.h>
