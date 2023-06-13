@@ -1,6 +1,9 @@
 #include <cmath>
 #include <sstream>
 #include <regex>
+#include <sys/ioctl.h>
+#include <termios.h>
+#include <errno.h>
 #include <rapidfuzz/fuzz.hpp>
 #include <unicode/unistr.h>
 #include <unicode/locid.h>
@@ -10,9 +13,6 @@
 #include "curses.h"
 #include "user_interface.h"
 #include "util.h"
-#include <sys/ioctl.h>
-#include <termios.h>
-#include <errno.h>
 
 UserInterface::UserInterface() {
     init_color_pairs();
@@ -235,16 +235,13 @@ void UserInterface::fuzzy_search() {
 }
 
 void UserInterface::paint_matched_chars(const std::string &s, size_t row) const {
-    if (query.empty()) return;
-  
-    std::string _s(s);
-    std::string _q(query);
-    
-    if (!case_sensitivity) {
-        _s = to_lowercase(_s);
-        _q = to_lowercase(_q);
+    if (query.empty()) {
+        return;
     }
-
+  
+    const std::string &_s = case_sensitivity ? s : to_lowercase(s);
+    const std::string &_q = case_sensitivity ? query : to_lowercase(query);
+    
     std::optional<std::vector<Index>> indexes;
 
     switch (search_mode) {
