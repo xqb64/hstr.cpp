@@ -356,6 +356,7 @@ void UserInterface::clear_row(size_t r) const {
 void UserInterface::pad2end() const {
     int y, x;
     getyx(stdscr, y, x);
+    static_cast<void>(y);
     int max_x = getmaxx(stdscr);
     int diff = max_x - x;
     for (int i = 0; i < diff; i++) {
