@@ -28,9 +28,10 @@ enum HorizontalDirection {
 class UserInterface {
 public:
     UserInterface();
-    void echo(bool newline = false);
+    void echo(const std::string &line);
     void search();
     void move_highlighted(VerticalDirection d);
+    const std::string &get_highlighted();
     void move_cursor(HorizontalDirection d);
     size_t get_cursor_position() { return cursor_position; }
     void insert_into_query(std::string s);
@@ -57,7 +58,6 @@ private:
     void init_color_pairs() const;
     void clear_row(size_t r) const;
     void pad2end() const;
-    std::string get_highlighted_entry();
     size_t page_count() const;
     size_t entry_count() const;
     size_t max_entry_count() const;

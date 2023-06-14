@@ -62,11 +62,14 @@ void mainloop() {
                 break;
             }
             case TAB: {
-                user_interface.echo();
+                const std::string &current_line = user_interface.get_highlighted();
+                user_interface.echo(current_line);
                 return;
             }
             case ENTER: {
-                user_interface.echo(true);
+                const std::string &current_line = user_interface.get_highlighted();
+                user_interface.echo(current_line);
+                user_interface.echo("\n");
                 return;
             }
             case KEY_PPAGE: {

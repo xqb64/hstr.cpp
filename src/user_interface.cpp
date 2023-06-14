@@ -18,13 +18,9 @@ UserInterface::UserInterface() {
     search();
 }
 
-void UserInterface::echo(bool newline) {
-    std::string current_entry = get_highlighted_entry();
-    for (auto byte : current_entry) {
+void UserInterface::echo(const std::string &line) {
+    for (auto byte : line) {
         IOCTL(0, TIOCSTI, &byte);
-    }
-    if (newline) {
-        IOCTL(0, TIOCSTI, "\n");
     }
 }
 
@@ -37,7 +33,7 @@ void UserInterface::search() {
 }
 
 void UserInterface::move_highlighted(VerticalDirection d) {
-    std::string old_highlighted_entry = get_highlighted_entry();
+    std::string old_highlighted_entry = get_highlighted();
     size_t old_highlighted_index = highlighted;
     size_t old_page = page;
 
@@ -70,6 +66,11 @@ void UserInterface::move_highlighted(VerticalDirection d) {
 
     display_status();
     reposition_cursor();
+}
+
+const std::string &UserInterface::get_highlighted() {
+    auto [start, end] = find_range(search_results, page, max_entry_count());
+    return *(start + highlighted);
 }
 
 void UserInterface::move_cursor(HorizontalDirection d) {
@@ -268,7 +269,7 @@ void UserInterface::paint_matched_chars(const std::string &s, size_t row) const 
 void UserInterface::paint_highlighted(const std::string &old_s, size_t old_row) {
     print(old_s, old_row, 0, COLOR_PAIR(1));
     paint_matched_chars(old_s, old_row);
-    print(get_highlighted_entry(), highlighted, 0, COLOR_PAIR(3));
+    print(get_highlighted(), highlighted, 0, COLOR_PAIR(3));
 }
 
 void UserInterface::display_status() const {
@@ -362,12 +363,6 @@ void UserInterface::pad2end() const {
     for (int i = 0; i < diff; i++) {
         addch(' ');
     }
-}
-
-inline std::string UserInterface::get_highlighted_entry() {
-    auto [start, end] = find_range(search_results, page, max_entry_count());
-    auto entry = start + highlighted;
-    return *entry;
 }
 
 inline size_t UserInterface::max_entry_count() const {
