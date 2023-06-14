@@ -33,9 +33,9 @@ void UserInterface::search() {
 }
 
 void UserInterface::move_highlighted(VerticalDirection d) {
-    std::string old_highlighted_entry = get_highlighted();
-    size_t old_highlighted_index = highlighted;
-    size_t old_page = page;
+    auto prev_highlighted_line = get_highlighted();
+    size_t prev_highlighted_idx = highlighted;
+    size_t prev_page = page;
 
     switch (d) {
         case DIRECTION_UP: {
@@ -58,8 +58,8 @@ void UserInterface::move_highlighted(VerticalDirection d) {
         }
     }
 
-    if (page == old_page) {
-        paint_highlighted(old_highlighted_entry, old_highlighted_index);
+    if (page == prev_page) {
+        paint_highlighted(prev_highlighted_line, prev_highlighted_idx);
     } else {
         reprint();
     }
