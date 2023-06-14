@@ -91,7 +91,7 @@ void UserInterface::move_cursor(HorizontalDirection d) {
     reposition_cursor();
 }
 
-void UserInterface::insert_into_query(std::string s) {
+void UserInterface::insert_into_query(const std::string &s) {
     size_t current_idx = byte_index(query, cursor_position);
     query.insert(current_idx, s);
 }

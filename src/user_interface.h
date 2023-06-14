@@ -34,7 +34,7 @@ public:
     const std::string &get_highlighted();
     void move_cursor(HorizontalDirection d);
     size_t get_cursor_position() { return cursor_position; }
-    void insert_into_query(std::string s);
+    void insert_into_query(const std::string &s);
     void remove_from_query();
     void turn_page(VerticalDirection d);
     void toggle_search_mode();
