@@ -300,15 +300,9 @@ void UserInterface::display_error() const {
 
 const char *UserInterface::get_search_mode_str() const {
     switch (search_mode) {
-        case MODE_EXACT: {
-            return "exact";
-        }
-        case MODE_REGEX: {
-            return "regex";
-        }
-        case MODE_FUZZY: {
-            return "fuzzy";
-        }
+        case MODE_EXACT: return "exact";
+        case MODE_REGEX: return "regex";
+        case MODE_FUZZY: return "fuzzy";
         default: throw std::runtime_error("Not implemented.");
     }
 }
