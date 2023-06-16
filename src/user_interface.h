@@ -43,6 +43,7 @@ public:
     void reprint();
     void set_error(const char *error);
 private:
+    void sort();
     void exact_search();
     void regex_search();
     void fuzzy_search();
@@ -62,7 +63,8 @@ private:
     size_t entry_count() const;
     size_t max_entry_count() const;
     size_t max_entry_length() const;
-    const std::vector<std::string> &determine_container() const;
+    std::vector<std::string> &determine_container();
+    const std::vector<std::string> &determine_container_const() const;
     std::vector<std::string> search_results;
     std::vector<std::string> history;
     std::string query;

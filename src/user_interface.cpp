@@ -15,6 +15,7 @@
 UserInterface::UserInterface() {
     init_color_pairs();
     read_history();
+    sort();
     search();
 }
 
@@ -69,7 +70,7 @@ void UserInterface::move_highlighted(VerticalDirection d) {
 }
 
 const std::string &UserInterface::get_highlighted() {
-    auto [start, end] = find_range(search_results, page, max_entry_count());
+    auto [start, end] = find_range(determine_container_const(), page, max_entry_count());
     return *(start + highlighted);
 }
 
@@ -138,7 +139,7 @@ void UserInterface::print_lines(const std::vector<std::string> &lines) {
 
     display_mode = lines == history ? HISTORY : SEARCH_RESULTS;
 
-    auto [start, end] = find_range(determine_container(), page, max_entry_count());
+    auto [start, end] = find_range(determine_container_const(), page, max_entry_count());
 
     for (auto it = start; it != end; ++it) {
         size_t idx = std::distance(start, end) - std::distance(it, end);
@@ -156,11 +157,16 @@ void UserInterface::print_lines(const std::vector<std::string> &lines) {
 }
 
 void UserInterface::reprint() {
-    print_lines(determine_container());
+    print_lines(determine_container_const());
 }
 
 void UserInterface::set_error(const char *err) {
     error = err;
+}
+
+void UserInterface::sort() {
+    sort_lines(determine_container());
+    deduplicate_lines(determine_container());
 }
 
 void UserInterface::exact_search() {
@@ -325,7 +331,7 @@ inline void UserInterface::reposition_cursor() const {
 }
 
 void UserInterface::read_history() {
-    history = read_file("/home/alex/Repositories/hstr/fake_history");
+    history = read_file("/home/alex/.bash_history");
     search_results = history;
 }
 
@@ -372,6 +378,10 @@ inline size_t UserInterface::entry_count() const {
     return end - start;
 }
 
-const std::vector<std::string> &UserInterface::determine_container() const {
+std::vector<std::string> &UserInterface::determine_container() {
+    return display_mode == HISTORY ? history : search_results;
+}
+
+const std::vector<std::string> &UserInterface::determine_container_const() const {
     return display_mode == HISTORY ? history : search_results;
 }

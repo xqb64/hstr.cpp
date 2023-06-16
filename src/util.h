@@ -21,6 +21,8 @@ std::optional<std::vector<Index>> find_indexes_regex(const std::string &s, const
 std::optional<std::vector<Index>> find_indexes_fuzzy(const std::string &s, const std::string &q);
 std::size_t find_position(const std::string &s, size_t idx);
 std::string to_lowercase(const std::string &s);
+void sort_lines(std::vector<std::string> &v);
+void deduplicate_lines(std::vector<std::string> &v);
 
 #define IOCTL(fd, cmd, byte) \
 do { \

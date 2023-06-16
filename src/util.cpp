@@ -1,4 +1,7 @@
+#include <algorithm>
 #include <fstream>
+#include <unordered_map>
+#include <unordered_set>
 #include <iostream>
 #include <regex>
 #include <stdexcept>
@@ -143,4 +146,35 @@ std::string to_lowercase(const std::string &s) {
     std::string tmp;
     us.toLower(icu::Locale::getRoot()).toUTF8String(tmp);
     return tmp;
+}
+
+bool compare_lines(const std::string &l1, const std::string &l2, const std::unordered_map<std::string, std::pair<size_t, size_t>> &freqpos_map) {
+    const auto &freqpos1 = freqpos_map.at(l1);
+    const auto &freqpos2 = freqpos_map.at(l2);
+
+    if (freqpos1.first != freqpos2.first) {
+        return freqpos1.first > freqpos2.first;
+    } else {
+        return freqpos2.second > freqpos1.second;
+    }
+}
+
+void sort_lines(std::vector<std::string> &v) {
+    std::unordered_map<std::string, std::pair<size_t, size_t>> freqpos_map;
+
+    for (size_t i = 0; i < v.size(); i++) {
+        freqpos_map[v[i]].first++;
+        freqpos_map[v[i]].second = i;
+    }
+
+    std::sort(v.begin(), v.end(), [&freqpos_map](const std::string &l1, const std::string &l2){
+        return compare_lines(l1, l2, freqpos_map);       
+    });
+}
+
+void deduplicate_lines(std::vector<std::string> &v) {
+    std::unordered_set<std::string> unique_lines;
+    v.erase(std::remove_if(v.begin(), v.end(), [&unique_lines](const std::string &l) {
+        return !unique_lines.insert(l).second;
+    }), v.end());
 }
